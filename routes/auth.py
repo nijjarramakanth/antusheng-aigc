@@ -31,7 +31,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': 'User registered successfully',
@@ -58,7 +58,7 @@ def login():
     if not user.is_active:
         return jsonify({'error': 'User account is inactive'}), 403
     
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     
     return jsonify({
         'message': 'Login successful',

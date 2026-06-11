@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提示词视频管理</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3147;
+    --accent: #7c6af7;
+    --accent2: #5de4c7;
+    --text: #e8eaf0;
+    --text-muted: #8b8fa8;
+    --success: #4ade80;
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    width: 360px;
+  }
+  .login-card h1 { font-size: 18px; margin-bottom: 24px; text-align: center; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; padding: 11px;
+    background: linear-gradient(135deg, var(--accent), #9f8fff);
+    border: none; border-radius: 8px; color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .err { color: var(--danger); font-size: 12px; margin-top: 8px; text-align: center; display: none; }
+
+  /* APP */
+  #app-screen { display: none; }
+  .topbar {
+    height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar h1 { font-size: 15px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); }
+  .logout-btn { padding: 5px 12px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+
+  .main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  .toolbar {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .toolbar input {
+    flex: 1; min-width: 200px; padding: 9px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+  }
+  .toolbar input:focus { border-color: var(--accent); }
+  .stats-bar {
+    display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 20px; font-size: 13px;
+  }
+  .stat strong { color: var(--accent); font-size: 20px; display: block; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 12px; font-size: 11px;
+    font-weight: 600; color: var(--text-muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: var(--surface2); }
+
+  .video-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .has-video { background: rgba(74,222,128,0.15); color: var(--success); }
+  .no-video { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+  .upload-btn {
+    padding: 6px 12px; background: var(--accent); border: none;
+    border-radius: 6px; color: #fff; font-size: 12px; cursor: pointer;
+    font-weight: 600; white-space: nowrap;
+  }
+  .upload-btn:hover { opacity: 0.85; }
+  .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .preview-btn {
+    padding: 6px 12px; background: transparent; border: 1px solid var(--accent2);
+    border-radius: 6px; color: var(--accent2); font-size: 12px; cursor: pointer;
+    font-weight: 600; white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+
+  .progress-bar {
+    width: 100%; height: 4px; background: var(--border);
+    border-radius: 2px; margin-top: 6px; display: none;
+  }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+  .file-input { display: none; }
+
+  .title-cell { max-width: 200px; font-weight: 600; }
+  .content-cell { max-width: 300px; color: var(--text-muted); font-size: 12px; line-height: 1.4; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px; font-size: 13px;
+    z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  .loading { text-align: center; padding: 48px; color: var(--text-muted); }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .filter-btns { display: flex; gap: 8px; }
+  .filter-btn {
+    padding: 7px 14px; border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>🎬 视频管理后台</h1>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="username" placeholder="教师账号">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="password" placeholder="密码" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-primary" onclick="login()">登录</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <h1>⚡ 提示词视频管理</h1>
+    <div class="topbar-right">
+      <span id="user-label"></span>
+      <button class="logout-btn" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat"><strong id="stat-total">-</strong>总提示词</div>
+      <div class="stat"><strong id="stat-has-video">-</strong>已有视频</div>
+      <div class="stat"><strong id="stat-no-video">-</strong>待上传</div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="搜索提示词标题..." oninput="filterTable()">
+      <div class="filter-btns">
+        <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
+        <button class="filter-btn" onclick="setFilter('has', this)">已有视频</button>
+        <button class="filter-btn" onclick="setFilter('no', this)">待上传</button>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <div id="table-container">
+        <div class="loading"><span class="spinner"></span>加载中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:5000/api';
+let token = localStorage.getItem('admin_token');
+let currentUser = JSON.parse(localStorage.getItem('admin_user') || 'null');
+let allPrompts = [];
+let currentFilter = 'all';
+
+// ─── AUTH ───────────────────────────────────────
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) return showErr('请填写账号和密码');
+  try {
+    const r = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const d = await r.json();
+    if (!r.ok) return showErr(d.error || '登录失败');
+    if (d.user.role !== 'teacher') return showErr('仅教师账号可访问');
+    token = d.access_token;
+    currentUser = d.user;
+    localStorage.setItem('admin_token', token);
+    localStorage.setItem('admin_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(e) { showErr('无法连接服务器'); }
+}
+
+function logout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showErr(msg) {
+  const el = document.getElementById('err');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// ─── APP ─────────────────────────────────────────
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('user-label').textContent = currentUser.username;
+  loadPrompts();
+}
+
+async function loadPrompts() {
+  try {
+    const r = await fetch(`${API}/prompts/?limit=500`, {
+      headers: {'Authorization': `Bearer ${token}`}
+    });
+    const d = await r.json();
+    allPrompts = d.prompts || [];
+    updateStats();
+    renderTable(allPrompts);
+  } catch(e) {
+    document.getElementById('table-container').innerHTML = '<div class="loading">加载失败</div>';
+  }
+}
+
+function updateStats() {
+  const hasVideo = allPrompts.filter(p => p.video_file).length;
+  document.getElementById('stat-total').textContent = allPrompts.length;
+  document.getElementById('stat-has-video').textContent = hasVideo;
+  document.getElementById('stat-no-video').textContent = allPrompts.length - hasVideo;
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTable();
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let filtered = allPrompts;
+  if (currentFilter === 'has') filtered = filtered.filter(p => p.video_file);
+  if (currentFilter === 'no') filtered = filtered.filter(p => !p.video_file);
+  if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q));
+  renderTable(filtered);
+}
+
+function renderTable(prompts) {
+  if (!prompts.length) {
+    document.getElementById('table-container').innerHTML = '<div class="loading">没有找到提示词</div>';
+    return;
+  }
+
+  document.getElementById('table-container').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>标题</th>
+          <th>提示词内容</th>
+          <th>视频文件名</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${prompts.map(p => `
+          <tr id="row-${p.id}">
+            <td style="color:var(--text-muted);font-size:12px">${p.id}</td>
+            <td class="title-cell">${p.title}</td>
+            <td class="content-cell">${(p.content||'').slice(0,80)}...</td>
+            <td style="font-size:11px;color:var(--text-muted);font-family:monospace">${p.video_file || '—'}</td>
+            <td>
+              ${p.video_file
+                ? '<span class="video-status has-video">✅ 已上传</span>'
+                : '<span class="video-status no-video">⬆️ 待上传</span>'}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;flex-direction:column">
+                <input type="file" class="file-input" id="file-${p.id}" accept="video/*" onchange="uploadVideo(${p.id}, this)">
+                <button class="upload-btn" onclick="document.getElementById('file-${p.id}').click()" id="btn-${p.id}">
+                  ${p.video_file ? '重新上传' : '上传视频'}
+                </button>
+                <div class="progress-bar" id="progress-${p.id}">
+                  <div class="progress-fill" id="fill-${p.id}" style="width:0%"></div>
+                </div>
+                ${p.video_file ? `<a href="/api/upload/files/${p.video_file}" target="_blank" class="preview-btn">预览</a>` : ''}
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function uploadVideo(promptId, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById(`btn-${promptId}`);
+  const progressBar = document.getElementById(`progress-${promptId}`);
+  const fill = document.getElementById(`fill-${promptId}`);
+
+  btn.disabled = true;
+  btn.textContent = '上传中...';
+  progressBar.style.display = 'block';
+  fill.style.width = '10%';
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+
+    // Simulate progress
+    let progress = 10;
+    const timer = setInterval(() => {
+      progress = Math.min(progress + 10, 85);
+      fill.style.width = progress + '%';
+    }, 300);
+
+    const r = await fetch(`${API}/upload/`, {
+      method: 'POST',
+      headers: {'Authorization': `Bearer ${token}`},
+      body: fd
+    });
+
+    clearInterval(timer);
+    const d = await r.json();
+
+    if (!r.ok) {
+      showToast(d.error || '上传失败', 'error');
+      btn.disabled = false;
+      btn.textContent = '上传视频';
+      progressBar.style.display = 'none';
+      return;
+    }
+
+    fill.style.width = '90%';
+
+    // Update prompt video_file in DB
+    const filename = d.url.split('/').pop();
+    const ur = await fetch(`${API}/prompts/${promptId}/video`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({video_file: filename})
+    });
+
+    fill.style.width = '100%';
+
+    if (ur.ok) {
+      // Update local data
+      const p = allPrompts.find(x => x.id === promptId);
+      if (p) { p.video_file = filename; p.video_url = d.url; }
+      updateStats();
+      showToast(`✅ "${file.name}" 上传成功！`, 'success');
+      
+      // Update row
+      setTimeout(() => {
+        filterTable();
+      }, 500);
+    } else {
+      showToast('上传成功但关联失败，请重试', 'error');
+    }
+
+  } catch(e) {
+    showToast('上传出错：' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '上传视频';
+    progressBar.style.display = 'none';
+  }
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Auto login if token exists
+if (token && currentUser) showApp();
+</script>
+</body>
+</html>

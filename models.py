@@ -103,7 +103,10 @@ class Submission(db.Model):
             'prompt_used': self.prompt_used,
             'file_url': self.file_url,
             'submitted_at': self.submitted_at.isoformat(),
-            'status': self.status
+            'status': self.status,
+            'score': self.feedback.score if self.feedback else None,
+            'comments': self.feedback.comments if self.feedback else None,
+            'ai_suggestions': self.feedback.ai_suggestions if self.feedback else None
         }
 
 class Feedback(db.Model):
@@ -149,6 +152,7 @@ class Prompt(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     views = db.Column(db.Integer, default=0)
     rating = db.Column(db.Float, default=0.0)
+    video_file = db.Column(db.String(300), default='')
     
     def to_dict(self):
         return {

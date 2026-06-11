@@ -23,7 +23,7 @@ def create_feedback():
         return jsonify({'error': 'Submission not found'}), 404
     
     assignment = Assignment.query.get(submission.assignment_id)
-    if assignment.teacher_id != user_id:
+    if str(assignment.teacher_id) != str(user_id):
         return jsonify({'error': 'Cannot grade submissions for other teachers assignments'}), 403
     
     existing_feedback = Feedback.query.filter_by(submission_id=data['submission_id']).first()

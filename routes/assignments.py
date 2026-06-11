@@ -66,7 +66,7 @@ def update_assignment(assignment_id):
     if not assignment:
         return jsonify({'error': 'Assignment not found'}), 404
     
-    if assignment.teacher_id != user_id:
+    if str(assignment.teacher_id) != str(user_id):
         return jsonify({'error': 'Cannot update other teachers assignments'}), 403
     
     data = request.get_json()
@@ -96,7 +96,7 @@ def delete_assignment(assignment_id):
     if not assignment:
         return jsonify({'error': 'Assignment not found'}), 404
     
-    if assignment.teacher_id != user_id:
+    if str(assignment.teacher_id) != str(user_id):
         return jsonify({'error': 'Cannot delete other teachers assignments'}), 403
     
     db.session.delete(assignment)

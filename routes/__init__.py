@@ -15,3 +15,6 @@ from .assignments import *
 from .submissions import *
 from .prompts import *
 from .feedback import *
+
+upload_bp = Blueprint('upload', __name__, url_prefix='/api/upload')
+from .upload import *

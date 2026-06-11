@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIGC 教育智慧系统</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3147;
+    --accent: #7c6af7;
+    --accent2: #5de4c7;
+    --text: #e8eaf0;
+    --text-muted: #8b8fa8;
+    --danger: #f87171;
+    --success: #4ade80;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* AUTH */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 60% 20%, #1e1b4b 0%, #0f1117 60%);
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .auth-logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .auth-logo .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+  }
+
+  .form-group select option { background: var(--bg); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--accent), #9f8fff);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-family: inherit;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+
+  /* APP LAYOUT */
+  #app-screen { display: none; min-height: 100vh; flex-direction: column; }
+
+  .topbar {
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    font-size: 15px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+  }
+
+  .nav-btn {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .nav-btn.active, .nav-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-info { text-align: right; }
+  .user-name { font-size: 13px; font-weight: 600; }
+  .user-role { font-size: 11px; color: var(--text-muted); }
+
+  .logout-btn {
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* MAIN */
+  .main { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ASSIGNMENTS */
+  .assignment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .assignment-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .assignment-card:hover { border-color: var(--accent); }
+
+  .assignment-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .assignment-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface2);
+    color: var(--text-muted);
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  .tag.accent { background: rgba(124,106,247,0.15); color: var(--accent); }
+
+  .btn-sm {
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { opacity: 0.85; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* FORM */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+
+  /* PROMPTS */
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .search-bar input {
+    flex: 1;
+    min-width: 200px;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .search-bar input:focus { border-color: var(--accent); }
+
+  .search-bar select {
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .prompts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  .prompt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .prompt-card:hover { border-color: var(--accent); }
+
+  .prompt-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .prompt-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .copy-btn {
+    padding: 5px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .copy-btn.copied { border-color: var(--success); color: var(--success); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    display: none;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .close-btn:hover { color: var(--text); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 300;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--success); color: var(--success); }
+
+  /* EMPTY */
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-header h2 { font-size: 18px; font-weight: 700; }
+
+  .score-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .score-high { background: rgba(74,222,128,0.15); color: var(--success); }
+  .score-mid { background: rgba(124,106,247,0.15); color: var(--accent); }
+  .score-low { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .topbar-logo { font-size: 13px; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>AIGC 教育智慧系统</h1>
+      <span class="badge">AI-Powered Learning</span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">登录</button>
+      <button class="tab-btn" onclick="switchTab('register')">注册</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="login-username" placeholder="输入用户名">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="login-password" placeholder="输入密码">
+      </div>
+      <button class="btn-primary" onclick="login()">登录</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="reg-username" placeholder="设置用户名">
+      </div>
+      <div class="form-group">
+        <label>真实姓名</label>
+        <input type="text" id="reg-fullname" placeholder="输入真实姓名">
+      </div>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="reg-email" placeholder="输入邮箱">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="reg-password" placeholder="设置密码">
+      </div>
+      <div class="form-group">
+        <label>角色</label>
+        <select id="reg-role">
+          <option value="student">学员</option>
+          <option value="teacher">教师</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="register()">注册</button>
+      <div class="error-msg" id="reg-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen" style="display:none; flex-direction:column; min-height:100vh;">
+  <div class="topbar">
+    <div class="topbar-logo">⚡ AIGC教育</div>
+    <div class="topbar-nav" id="nav-btns"></div>
+    <div class="topbar-user">
+      <div class="user-info">
+        <div class="user-name" id="topbar-name">-</div>
+        <div class="user-role" id="topbar-role">-</div>
+      </div>
+      <div class="avatar" id="topbar-avatar">-</div>
+      <button class="logout-btn" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- STUDENT PAGES -->
+    <div id="page-assignments" class="page">
+      <div class="page-header">
+        <h2>📋 任务列表</h2>
+      </div>
+      <div id="assignments-list" class="assignment-grid">
+        <div class="loading"><span class="spinner"></span>加载中...</div>
+      </div>
+    </div>
+
+    <div id="page-submissions" class="page">
+      <div class="page-header">
+        <h2>📤 我的提交</h2>
+      </div>
+      <div class="card">
+        <div id="submissions-list">
+          <div class="loading"><span class="spinner"></span>加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-prompts" class="page">
+      <div class="page-header">
+        <h2>🔮 提示词库</h2>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="prompt-search" placeholder="搜索提示词..." oninput="filterPrompts()">
+        <select id="prompt-category" onchange="filterPrompts()">
+          <option value="">全部分类</option>
+          <option value="text_generation">文本生成</option>
+          <option value="image_generation">图像生成</option>
+          <option value="video_generation">视频生成</option>
+          <option value="prompt_engineering">提示词工程</option>
+          <option value="copywriting">文案写作</option>
+          <option value="advanced">高级应用</option>
+        </select>
+      </div>
+      <div id="prompts-grid" class="prompts-grid">
+        <div class="loading"><span class="spinner"></span>加载中...</div>
+      </div>
+    </div>
+
+    <!-- TEACHER PAGES -->
+    <div id="page-publish" class="page">
+      <div class="page-header">
+        <h2>✏️ 发布任务</h2>
+      </div>
+      <div class="card">
+        <div class="form-group">
+          <label>任务标题</label>
+          <input type="text" id="new-title" placeholder="输入任务标题">
+        </div>
+        <div class="form-group">
+          <label>任务描述</label>
+          <textarea id="new-desc" rows="4" placeholder="详细描述任务要求..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="new-category">
+              <option value="text_generation">文本生成</option>
+              <option value="image_generation">图像生成</option>
+              <option value="video_generation">视频生成</option>
+              <option value="prompt_engineering">提示词工程</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>截止日期</label>
+            <input type="date" id="new-due">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>最高分值</label>
+          <input type="number" id="new-points" value="100" min="1" max="100">
+        </div>
+        <button class="btn-primary" onclick="publishAssignment()">发布任务</button>
+      </div>
+    </div>
+
+    <div id="page-review" class="page">
+      <div class="page-header">
+        <h2>👥 学员提交</h2>
+      </div>
+      <div class="card">
+        <div id="review-list">
+          <div class="loading"><span class="spinner"></span>加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-stats" class="page">
+      <div class="page-header">
+        <h2>📊 统计数据</h2>
+      </div>
+      <div id="stats-content">
+        <div class="loading"><span class="spinner"></span>加载中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal">
+    <div class="modal-title">
+      提交作业
+      <button class="close-btn" onclick="closeModal('submit-modal')">×</button>
+    </div>
+    <input type="hidden" id="submit-assignment-id">
+    <div class="form-group">
+      <label>作业内容</label>
+      <textarea id="submit-content" rows="5" placeholder="描述你的作品或思路..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>使用的提示词</label>
+      <textarea id="submit-prompt" rows="3" placeholder="你使用的提示词..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>上传图片/视频（可选）</label>
+      <div id="upload-area" style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleDrop(event)">
+        <div id="upload-hint" style="color:var(--text-muted);font-size:13px">📎 点击或拖拽上传（图片/视频，最大200MB）</div>
+        <div id="upload-preview" style="margin-top:10px;display:none"></div>
+      </div>
+      <input type="file" id="file-input" accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this.files[0])">
+      <input type="hidden" id="submit-file">
+    </div>
+    <button class="btn-primary" onclick="submitAssignment()">提交</button>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div class="modal-overlay" id="feedback-modal">
+  <div class="modal">
+    <div class="modal-title">
+      批改作业
+      <button class="close-btn" onclick="closeModal('feedback-modal')">×</button>
+    </div>
+    <input type="hidden" id="feedback-submission-id">
+    <div class="form-group">
+      <label>作业内容预览</label>
+      <div id="feedback-content-preview" style="padding:10px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text-muted);line-height:1.6;"></div>
+    </div>
+    <div class="form-group">
+      <label>评分（0-100）</label>
+      <input type="number" id="feedback-score" min="0" max="100" placeholder="85">
+    </div>
+    <div class="form-group">
+      <label>评语</label>
+      <textarea id="feedback-comments" rows="3" placeholder="对学员的评价..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>AI 改进建议</label>
+      <textarea id="feedback-suggestions" rows="3" placeholder="给学员的提示词改进建议..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitFeedback()">提交批改</button>
+  </div>
+</div>
+
+
+<!-- SUBMISSION DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">
+      作业详情
+      <button class="close-btn" onclick="closeModal('detail-modal')">×</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:5000/api';
+let token = localStorage.getItem('token');
+let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+let allPrompts = [];
+
+// ─── AUTH ───────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+}
+
+async function login() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!username || !password) return showError('login-error', '请填写完整信息');
+  try {
+    const r = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const d = await r.json();
+    if (!r.ok) return showError('login-error', d.error || '登录失败');
+    saveSession(d);
+  } catch(e) { showError('login-error', '无法连接服务器'); }
+}
+
+async function register() {
+  const username = document.getElementById('reg-username').value.trim();
+  const full_name = document.getElementById('reg-fullname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const role = document.getElementById('reg-role').value;
+  if (!username || !full_name || !email || !password) return showError('reg-error', '请填写完整信息');
+  try {
+    const r = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, full_name, email, password, role})
+    });
+    const d = await r.json();
+    if (!r.ok) return showError('reg-error', d.error || '注册失败');
+    saveSession(d);
+  } catch(e) { showError('reg-error', '无法连接服务器'); }
+}
+
+function saveSession(d) {
+  token = d.access_token;
+  currentUser = d.user;
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  showApp();
+}
+
+function logout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  document.getElementById('auth-screen').style.display = '';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// ─── APP ─────────────────────────────────────────────────
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+
+  document.getElementById('topbar-name').textContent = currentUser.username;
+  document.getElementById('topbar-role').textContent = currentUser.role === 'teacher' ? '教师' : '学员';
+  document.getElementById('topbar-avatar').textContent = currentUser.username[0].toUpperCase();
+
+  const nav = document.getElementById('nav-btns');
+  nav.innerHTML = '';
+  const pages = currentUser.role === 'teacher'
+    ? [['publish','✏️ 发布任务'],['review','👥 学员提交'],['stats','📊 统计'],['prompts','🔮 提示词库']]
+    : [['assignments','📋 任务'],['submissions','📤 我的提交'],['prompts','🔮 提示词库']];
+
+  pages.forEach(([id,label],i) => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn' + (i===0?' active':'');
+    b.textContent = label;
+    b.onclick = () => switchPage(id);
+    nav.appendChild(b);
+  });
+
+  switchPage(pages[0][0]);
+}
+
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.includes(id === 'assignments' ? '任务' : id === 'submissions' ? '提交' : id === 'prompts' ? '提示词' : id === 'publish' ? '发布' : id === 'review' ? '学员' : '统计'))
+      b.classList.add('active');
+  });
+  if (id === 'assignments') loadAssignments();
+  if (id === 'submissions') loadMySubmissions();
+  if (id === 'prompts') loadPrompts();
+  if (id === 'review') loadReview();
+  if (id === 'stats') loadStats();
+}
+
+// ─── ASSIGNMENTS ─────────────────────────────────────────
+
+async function loadAssignments() {
+  try {
+    const r = await apiFetch('/assignments/');
+    const d = await r.json();
+    const list = document.getElementById('assignments-list');
+    if (!d?.length) { list.innerHTML = empty('暂无任务'); return; }
+    list.innerHTML = d.map(a => `
+      <div class="assignment-card">
+        <div class="assignment-title">${a.title}</div>
+        <div class="assignment-desc">${a.description || '暂无描述'}</div>
+        <div style="margin-bottom:12px">
+          <span class="tag accent">${a.category || '未分类'}</span>
+          ${a.due_date ? `<span class="tag">截止：${a.due_date.slice(0,10)}</span>` : ''}
+          <span class="tag">${a.max_points || 100}分</span>
+        </div>
+        <button class="btn-sm btn-accent" onclick="openSubmit(${a.id})">提交作业</button>
+      </div>
+    `).join('');
+  } catch(e) { document.getElementById('assignments-list').innerHTML = empty('加载失败'); }
+}
+
+function openSubmit(id) {
+  document.getElementById('submit-assignment-id').value = id;
+  document.getElementById('submit-content').value = '';
+  document.getElementById('submit-prompt').value = '';
+  document.getElementById('submit-file').value = '';
+  openModal('submit-modal');
+}
+
+async function submitAssignment() {
+  const assignment_id = +document.getElementById('submit-assignment-id').value;
+  const content = document.getElementById('submit-content').value.trim();
+  const prompt_used = document.getElementById('submit-prompt').value.trim();
+  const file_url = document.getElementById('submit-file').value.trim();
+  if (!content) return showToast('请填写作业内容', false);
+  try {
+    const r = await apiFetch('/submissions/', 'POST', {assignment_id, content, prompt_used, file_url});
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || '提交失败', false);
+    closeModal('submit-modal');
+    showToast('作业提交成功！');
+  } catch(e) { showToast('提交失败', false); }
+}
+
+// ─── SUBMISSIONS ─────────────────────────────────────────
+
+async function loadMySubmissions() {
+  try {
+    const r = await apiFetch('/submissions/');
+    const d = await r.json();
+    const list = document.getElementById('submissions-list');
+    if (!d?.length) { list.innerHTML = empty('暂无提交记录'); return; }
+    list.innerHTML = `<table>
+      <thead><tr><th>任务</th><th>内容</th><th>评分</th><th>状态</th></tr></thead>
+      <tbody>${d.map(s => `
+        <tr style="cursor:pointer" onclick="openDetail(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <td style="font-weight:600">任务 #${s.assignment_id}</td>
+          <td style="max-width:300px;color:var(--text-muted)">${(s.content||'').slice(0,60)}</td>
+          <td>${s.score != null ? scoreBadge(s.score) : '-'}</td>
+          <td><span class="tag ${s.score!=null?'accent':''}">${s.score!=null?'✅ 已批改':'⏳ 待批改'}</span></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+  } catch(e) { document.getElementById('submissions-list').innerHTML = empty('加载失败'); }
+}
+
+// ─── PROMPTS ─────────────────────────────────────────────
+
+async function loadPrompts() {
+  try {
+    const r = await apiFetch('/prompts/');
+    const d = await r.json();
+    allPrompts = d.prompts || [];
+    renderPrompts(allPrompts);
+  } catch(e) { document.getElementById('prompts-grid').innerHTML = empty('加载失败'); }
+}
+
+function filterPrompts() {
+  const q = document.getElementById('prompt-search').value.toLowerCase();
+  const cat = document.getElementById('prompt-category').value;
+  const filtered = allPrompts.filter(p =>
+    (!q || p.title?.toLowerCase().includes(q) || p.content?.toLowerCase().includes(q)) &&
+    (!cat || p.category === cat)
+  );
+  renderPrompts(filtered);
+}
+
+function renderPrompts(prompts) {
+  const grid = document.getElementById('prompts-grid');
+  if (!prompts.length) { grid.innerHTML = empty('没有找到相关提示词'); return; }
+  grid.innerHTML = prompts.map(p => `
+    <div class="prompt-card">
+      <div class="prompt-title">${p.title}</div>
+      <div class="tag" style="margin-bottom:8px">${p.category || '通用'}</div>
+      <div class="prompt-text">${p.content}</div>
+      <button class="copy-btn" onclick="copyPrompt(this, \`${(p.content||'').replace(/`/g,'')}\`)">复制提示词</button>
+    </div>
+  `).join('');
+}
+
+function copyPrompt(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '复制提示词'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ─── TEACHER ─────────────────────────────────────────────
+
+async function publishAssignment() {
+  const title = document.getElementById('new-title').value.trim();
+  const description = document.getElementById('new-desc').value.trim();
+  const prompt_category = document.getElementById('new-category').value;
+  const due_date = document.getElementById('new-due').value;
+  const max_points = +document.getElementById('new-points').value;
+  if (!title) return showToast('请填写任务标题', false);
+  if (!description) return showToast('请填写任务描述', false);
+  try {
+    const r = await apiFetch('/assignments/', 'POST', {title, description, prompt_category, due_date, max_points});
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || '发布失败', false);
+    showToast('任务发布成功！');
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-desc').value = '';
+  } catch(e) { showToast('发布失败', false); }
+}
+
+async function loadReview() {
+  try {
+    const r = await apiFetch('/submissions/');
+    const d = await r.json();
+    const list = document.getElementById('review-list');
+    if (!d?.length) { list.innerHTML = empty('暂无提交'); return; }
+    list.innerHTML = `<table>
+      <thead><tr><th>学员</th><th>任务</th><th>内容摘要</th><th>评分</th><th>操作</th></tr></thead>
+      <tbody>${d.map(s => `
+        <tr>
+          <td style="font-weight:600">学员 #${s.student_id}</td>
+          <td>任务 #${s.assignment_id}</td>
+          <td style="max-width:200px;color:var(--text-muted)">${(s.content||'').slice(0,60)}</td>
+          <td>${s.score != null ? scoreBadge(s.score) : '-'}</td>
+          <td>
+            ${s.file_url ? `<a href="${s.file_url}" target="_blank" class="btn-sm btn-outline" style="text-decoration:none;margin-right:6px">查看文件</a>` : ''}
+            <button class="btn-sm btn-accent" onclick="openFeedback(${s.id}, '${(s.content||'').replace(/'/g,"\'")}')">批改</button>
+          </td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+  } catch(e) { document.getElementById('review-list').innerHTML = empty('加载失败'); }
+}
+
+function openFeedback(id, content) {
+  document.getElementById('feedback-submission-id').value = id;
+  document.getElementById('feedback-content-preview').textContent = content;
+  document.getElementById('feedback-score').value = '';
+  document.getElementById('feedback-comments').value = '';
+  document.getElementById('feedback-suggestions').value = '';
+  openModal('feedback-modal');
+}
+
+async function submitFeedback() {
+  const submission_id = +document.getElementById('feedback-submission-id').value;
+  const score = +document.getElementById('feedback-score').value;
+  const comments = document.getElementById('feedback-comments').value.trim();
+  const ai_suggestions = document.getElementById('feedback-suggestions').value.trim();
+  if (!score) return showToast('请填写评分', false);
+  try {
+    const r = await apiFetch('/feedback/', 'POST', {submission_id, score, comments, ai_suggestions});
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || '提交失败', false);
+    closeModal('feedback-modal');
+    showToast('批改完成！');
+    loadReview();
+  } catch(e) { showToast('提交失败', false); }
+}
+
+async function loadStats() {
+  try {
+    const [ar, sr] = await Promise.all([apiFetch('/assignments/'), apiFetch('/submissions/')]);
+    const [ad, sd] = await Promise.all([ar.json(), sr.json()]);
+    const assignments = Array.isArray(ad) ? ad : (ad.assignments || []);
+    const submissions = Array.isArray(sd) ? sd : (sd.submissions || []);
+    const scored = submissions.filter(s => s.score != null);
+    const avg = scored.length ? Math.round(scored.reduce((a,s) => a+s.score, 0)/scored.length) : 0;
+
+    document.getElementById('stats-content').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num">${assignments.length}</div><div class="stat-label">已发布任务</div></div>
+        <div class="stat-card"><div class="stat-num">${submissions.length}</div><div class="stat-label">总提交数</div></div>
+        <div class="stat-card"><div class="stat-num">${scored.length}</div><div class="stat-label">已批改</div></div>
+        <div class="stat-card"><div class="stat-num">${avg}</div><div class="stat-label">平均分</div></div>
+      </div>
+    `;
+  } catch(e) { document.getElementById('stats-content').innerHTML = empty('加载失败'); }
+}
+
+// ─── UTILS ───────────────────────────────────────────────
+
+function apiFetch(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(API + path, opts);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg, success=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (success?' success':'');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function empty(msg) {
+  return `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">${msg}</div></div>`;
+}
+
+function scoreBadge(score) {
+  const cls = score >= 80 ? 'score-high' : score >= 60 ? 'score-mid' : 'score-low';
+  return `<span class="score-badge ${cls}">${score}分</span>`;
+}
+
+
+async function handleFileSelect(file) {
+  if (!file) return;
+  showUploadProgress(file.name);
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch('/api/upload/', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: fd
+    });
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || '上传失败', false);
+    document.getElementById('submit-file').value = d.url;
+    showUploadDone(file, d.url);
+    showToast('上传成功！');
+  } catch(e) { showToast('上传失败', false); }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileSelect(file);
+}
+
+function showUploadProgress(name) {
+  const hint = document.getElementById('upload-hint');
+  hint.innerHTML = '<span class="spinner"></span>上传中：' + name;
+}
+
+function showUploadDone(file, url) {
+  const preview = document.getElementById('upload-preview');
+  const hint = document.getElementById('upload-hint');
+  hint.innerHTML = '✅ ' + file.name;
+  preview.style.display = 'block';
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => { preview.innerHTML = '<img src="'+e.target.result+'" style="max-width:100%;max-height:150px;border-radius:8px">'; };
+    reader.readAsDataURL(file);
+  } else {
+    preview.innerHTML = '<div style="color:var(--accent2);font-size:12px">🎬 视频已上传</div>';
+  }
+}
+
+  
+function openDetail(s) {
+  const scoreHtml = s.score != null ? `
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px;background:var(--bg);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">${s.score}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">得分</div>
+      </div>
+      <div style="flex:3;min-width:200px">
+        ${s.comments ? `<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600">教师评语</div><div style="font-size:13px;line-height:1.6;color:var(--text)">${s.comments}</div></div>` : ''}
+        ${s.ai_suggestions ? `<div><div style="font-size:11px;color:var(--accent2);margin-bottom:4px;font-weight:600">✨ AI 改进建议</div><div style="font-size:13px;line-height:1.6;color:var(--text)">${s.ai_suggestions}</div></div>` : ''}
+      </div>
+    </div>
+  ` : `<div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;color:var(--text-muted);margin-bottom:16px;font-size:13px">⏳ 等待教师批改中...</div>`;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">任务 #${s.assignment_id}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">提交时间：${new Date(s.submitted_at).toLocaleString('zh-CN')}</div>
+      ${scoreHtml}
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">作业内容</div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;color:var(--text)">${s.content}</div>
+      </div>
+      ${s.prompt_used ? `<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">使用的提示词</div><div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;color:var(--accent)">${s.prompt_used}</div></div>` : ''}
+      ${s.file_url ? `<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">上传的文件</div><a href="${s.file_url}" target="_blank" class="btn-sm btn-accent" style="text-decoration:none;display:inline-block">查看文件</a></div>` : ''}
+    </div>
+  `;
+  openModal('detail-modal');
+}
+
+// ─── INIT ────────────────────────────────────────────────
+
+if (token && currentUser) {
+  showApp();
+}
+</script>
+</body>
+</html>
