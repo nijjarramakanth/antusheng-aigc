@@ -842,6 +842,18 @@
 </div>
 
 
+
+<!-- PROMPT DETAIL MODAL -->
+<div class="modal-overlay" id="prompt-detail-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-title">
+      <span id="prompt-detail-title"></span>
+      <button class="close-btn" onclick="closeModal('prompt-detail-modal')">×</button>
+    </div>
+    <div id="prompt-detail-content"></div>
+  </div>
+</div>
+
 <!-- SUBMISSION DETAIL MODAL -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal" style="max-width:600px">
@@ -1063,11 +1075,17 @@ function renderPrompts(prompts) {
   const grid = document.getElementById('prompts-grid');
   if (!prompts.length) { grid.innerHTML = empty('没有找到相关提示词'); return; }
   grid.innerHTML = prompts.map(p => `
-    <div class="prompt-card">
+    <div class="prompt-card" onclick="openPromptDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="cursor:pointer">
+      ${p.video_url ? `<div style="position:relative;margin-bottom:12px;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9">
+        <video src="${p.video_url}" style="width:100%;height:100%;object-fit:cover" muted playsinline preload="metadata"></video>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <div style="width:40px;height:40px;background:rgba(124,106,247,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">▶</div>
+        </div>
+      </div>` : ''}
       <div class="prompt-title">${p.title}</div>
       <div class="tag" style="margin-bottom:8px">${p.category || '通用'}</div>
       <div class="prompt-text">${p.content}</div>
-      <button class="copy-btn" onclick="copyPrompt(this, \`${(p.content||'').replace(/`/g,'')}\`)">复制提示词</button>
+      <button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this, \`${(p.content||'').replace(/`/g,'')}\`)">复制提示词</button>
     </div>
   `).join('');
 }
@@ -1246,6 +1264,22 @@ function showUploadDone(file, url) {
 }
 
   
+
+function openPromptDetail(p) {
+  document.getElementById('prompt-detail-title').textContent = p.title;
+  document.getElementById('prompt-detail-content').innerHTML = `
+    ${p.video_url ? `<div style="margin-bottom:16px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9">
+      <video src="${p.video_url}" style="width:100%;height:100%" controls autoplay muted></video>
+    </div>` : '<div style="background:var(--bg);border-radius:10px;padding:20px;text-align:center;color:var(--text-muted);margin-bottom:16px">暂无视频效果</div>'}
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">提示词内容</div>
+      <div style="background:var(--bg);border-radius:8px;padding:14px;font-size:13px;line-height:1.8;color:var(--text)">${p.content}</div>
+    </div>
+    <button class="btn-sm btn-accent" onclick="copyPrompt(this, \`${(p.content||'').replace(/`/g,"'")}\`)">复制提示词</button>
+  `;
+  openModal('prompt-detail-modal');
+}
+
 function openDetail(s) {
   const scoreHtml = s.score != null ? `
     <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">

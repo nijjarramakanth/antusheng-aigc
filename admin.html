@@ -181,7 +181,13 @@
       <div class="stat"><strong id="stat-no-video">-</strong>待上传</div>
     </div>
 
-    <div class="toolbar">
+    
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="upload-btn" onclick="openCreateModal()" style="padding:10px 20px;font-size:13px">+ 新增提示词</button>
+    <span style="color:var(--text-muted);font-size:12px;align-self:center">选中提示词后可批量删除</span>
+  </div>
+
+  <div class="toolbar">
       <input type="text" id="search-input" placeholder="搜索提示词标题..." oninput="filterTable()">
       <div class="filter-btns">
         <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
@@ -195,6 +201,35 @@
         <div class="loading"><span class="spinner"></span>加载中...</div>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- CREATE PROMPT MODAL -->
+<div class="modal-overlay" id="create-modal" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">
+      新增提示词
+      <button class="close-btn" onclick="document.getElementById('create-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="new-prompt-title" placeholder="提示词标题">
+    </div>
+    <div class="form-group">
+      <label>内容</label>
+      <textarea id="new-prompt-content" rows="5" placeholder="提示词详细内容..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;resize:vertical;font-family:inherit"></textarea>
+    </div>
+    <div class="form-group">
+      <label>分类</label>
+      <select id="new-prompt-category" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;font-family:inherit">
+        <option value="video_generation">视频生成</option>
+        <option value="image_generation">图像生成</option>
+        <option value="text_generation">文本生成</option>
+        <option value="prompt_engineering">提示词工程</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="createPrompt()">创建</button>
   </div>
 </div>
 
@@ -329,6 +364,7 @@ function renderTable(prompts) {
                   <div class="progress-fill" id="fill-${p.id}" style="width:0%"></div>
                 </div>
                 ${p.video_file ? `<a href="/api/upload/files/${p.video_file}" target="_blank" class="preview-btn">预览</a>` : ''}
+                <button class="upload-btn" style="background:#f87171" onclick="deletePrompt(${p.id})">删除</button>
               </div>
             </td>
           </tr>
@@ -336,6 +372,47 @@ function renderTable(prompts) {
       </tbody>
     </table>
   `;
+}
+
+async function deletePrompt(id) {
+  if (!confirm('确定删除这条提示词？')) return;
+  try {
+    const r = await fetch(`/api/prompts/${id}`, {
+      method: 'DELETE',
+      headers: {'Authorization': `Bearer ${token}`}
+    });
+    if (r.ok) {
+      showToast('删除成功', 'success');
+      allPrompts = allPrompts.filter(p => p.id !== id);
+      updateStats();
+      filterTable();
+    } else { showToast('删除失败', 'error'); }
+  } catch(e) { showToast('删除失败', 'error'); }
+}
+
+function openCreateModal() {
+  document.getElementById('create-modal').classList.add('open');
+}
+
+async function createPrompt() {
+  const title = document.getElementById('new-prompt-title').value.trim();
+  const contentVal = document.getElementById('new-prompt-content').value.trim();
+  const category = document.getElementById('new-prompt-category').value;
+  if (!title || !contentVal) return showToast('请填写标题和内容', 'error');
+  try {
+    const r = await fetch('/api/prompts/', {
+      method: 'POST',
+      headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify({title, content: contentVal, category, difficulty: 'intermediate', ai_platform: 'sora'})
+    });
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || '创建失败', 'error');
+    showToast('创建成功！', 'success');
+    document.getElementById('create-modal').classList.remove('open');
+    document.getElementById('new-prompt-title').value = '';
+    document.getElementById('new-prompt-content').value = '';
+    loadPrompts();
+  } catch(e) { showToast('创建失败', 'error'); }
 }
 
 async function uploadVideo(promptId, input) {
