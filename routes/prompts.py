@@ -70,3 +70,31 @@ def update_prompt_video(prompt_id):
     db.session.commit()
     return jsonify({'message': 'Updated', 'video_file': p.video_file}), 200
 
+
+@prompt_bp.route('/', methods=['POST'])
+@jwt_required()
+def create_prompt():
+    data = request.get_json()
+    if not data or not data.get('title') or not data.get('content'):
+        return jsonify({'error': 'Missing required fields'}), 400
+    p = Prompt(
+        title=data['title'],
+        content=data['content'],
+        category=data.get('category', 'video_generation'),
+        difficulty=data.get('difficulty', 'intermediate'),
+        ai_platform=data.get('ai_platform', 'sora'),
+        created_by='admin'
+    )
+    db.session.add(p)
+    db.session.commit()
+    return jsonify({'message': 'Created', 'prompt': prompt_to_dict(p)}), 201
+
+@prompt_bp.route('/<int:prompt_id>', methods=['DELETE'])
+@jwt_required()
+def delete_prompt(prompt_id):
+    p = Prompt.query.get(prompt_id)
+    if not p:
+        return jsonify({'error': 'Not found'}), 404
+    db.session.delete(p)
+    db.session.commit()
+    return jsonify({'message': 'Deleted'}), 200
